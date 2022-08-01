@@ -26,15 +26,15 @@ PATH = {
     
 DISEASE = 'BloodVessel' 
 MODE = 'seg'
-NET_NAME = 'deeplabv3+'
-ENCODER_NAME = 'efficientnet-b5'
-VERSION = 'v4.10.1-pretrained'
+NET_NAME = 'sfnet'
+ENCODER_NAME = 'resnet50'
+VERSION = 'v7.3.4-roi'
 
 
-DEVICE = '0'
+DEVICE = '1'
 # True if use internal pre-trained model
 # Must be True when pre-training and inference
-PRE_TRAINED = False
+PRE_TRAINED = True
 # True if use external pre-trained model 
 EX_PRE_TRAINED = True if 'pretrain' in VERSION else False
 # True if use resume model

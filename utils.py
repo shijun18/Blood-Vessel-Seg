@@ -5,7 +5,6 @@ import numpy as np
 import torch
 import random
 from skimage.metrics import hausdorff_distance
-from monai.metrics.hausdorff_distance import compute_hausdorff_distance
 from skimage import measure
 import copy
 
@@ -131,12 +130,6 @@ def multi_hd(y_true,y_pred,num_classes):
 
 
 
-def mhd_reader(data_path):
-    data = sitk.ReadImage(data_path)
-    image = sitk.GetArrayFromImage(data).astype(np.float32)
-    return data,image
-
-
 def save_as_nii(data, save_path):
     sitk_data = sitk.GetImageFromArray(data)
     sitk.WriteImage(sitk_data, save_path)
@@ -251,3 +244,72 @@ def dfs_rename_weight(ckpt_path):
             rename_weight_path(ckpt_path)
             break  
 
+
+
+if __name__ =='__main__':
+    import pickle
+
+    # nii_dir = './result/BloodVessel/seg/nnunet/nii/2d/fold123/labels'
+    # mhd_dir = './result/BloodVessel/seg/nnunet/mhd/2d/fold123/labels'
+
+    # if not os.path.exists(mhd_dir):
+    #     os.makedirs(mhd_dir)
+    
+    # item_list = os.listdir(nii_dir)
+    # for item in item_list:
+    #     ID = item.split('.')[0]
+    #     new_item = os.path.join(mhd_dir,f'{ID}.mhd')
+    #     item_data = sitk.ReadImage(os.path.join(nii_dir,item))
+    #     item_array = sitk.GetArrayFromImage(item_data)
+
+    #     sitk_data = sitk.GetImageFromArray(item_array.astype(np.uint8))
+    #     sitk_data.SetSpacing(item_data.GetSpacing())
+    #     sitk_data.SetOrigin(item_data.GetOrigin())
+    #     sitk_data.SetDirection(item_data.GetDirection())
+    #     sitk.WriteImage(sitk_data,new_item,useCompression=False)
+
+
+    
+    # npz_dir = './result/BloodVessel/seg/nnunet/npz/3d_cascade_fullres/fold023'
+    # mhd_dir = './result/BloodVessel/seg/nnunet/mhd/3d_cascade_fullres/fold023-prob10/labels'
+
+    # npz_dir = './result/BloodVessel/seg/nnunet/npz/3d_cascade_fullres/fold023'
+    # mhd_dir = './result/BloodVessel/seg/nnunet/mhd/3d_cascade_fullres/fold023-prob17/labels'
+
+    # npz_dir = './result/BloodVessel/seg/nnunet/npz/ensemble_3d_and_3d_cascade/fold01234'
+    # mhd_dir = './result/BloodVessel/seg/nnunet/mhd/ensemble_3d_and_3d_cascade/fold01234-prob15/labels'
+
+    # npz_dir = './result/BloodVessel/seg/nnunet/npz/ensemble_2d_3d_and_3d_cascade/fold01234'
+    # mhd_dir = './result/BloodVessel/seg/nnunet/mhd/ensemble_2d_3d_and_3d_cascade/fold01234-prob15/labels'
+    
+    
+    # npz_dir = './result/BloodVessel/seg/nnunet/npz/ensemble_2d_and_3d_cascade/fold01234'
+    # mhd_dir = './result/BloodVessel/seg/nnunet/mhd/ensemble_2d_and_3d_cascade/fold01234-prob15/labels'
+
+
+    npz_dir = './result/BloodVessel/seg/nnunet/npz/ensemble_3d_and_3d_cascade_fake/fold01234'
+    mhd_dir = './result/BloodVessel/seg/nnunet/mhd/ensemble_3d_and_3d_cascade_fake/fold01234-prob00005/labels'
+
+    if not os.path.exists(mhd_dir):
+        os.makedirs(mhd_dir)
+    
+    item_list = os.listdir(npz_dir)
+    item_list.sort()
+    for item in item_list:
+        if '.npz' in item and item in ['test06.npz']:
+            final_result = np.zeros((128,448,448),dtype=np.uint8)
+            ID = item.split('.')[0]
+            new_item = os.path.join(mhd_dir,f'{ID}.mhd')
+            item_array = np.array(np.load(os.path.join(npz_dir,item))['softmax'])
+            print('0.5:',np.sum(np.argmax(item_array,axis=0)))
+            # print(item_array.shape)
+            final_result[:,1:,1:] = (item_array[1] > 0.00005)
+            print('0.00005:',np.sum(final_result))
+            with open(os.path.join(npz_dir,f'{ID}.pkl'),'rb') as f:
+                item_data = pickle.load(f)[0]
+                # print(item_data[0])
+            sitk_data = sitk.GetImageFromArray(final_result.astype(np.uint8))
+            sitk_data.SetSpacing(item_data['original_spacing'])
+            sitk_data.SetOrigin(item_data['itk_origin'])
+            sitk_data.SetDirection(item_data['itk_direction'])
+            sitk.WriteImage(sitk_data,new_item,useCompression=False)

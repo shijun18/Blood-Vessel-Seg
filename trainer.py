@@ -32,6 +32,8 @@ from data_utils.data_loader import DataGenerator, To_Tensor, CropResize, Random_
 from torch.cuda.amp import autocast as autocast
 
 from torch.cuda.amp import GradScaler
+
+import setproctitle
 import warnings
 warnings.filterwarnings('ignore')
 # GPU version.
@@ -259,12 +261,15 @@ class SemanticSeg(object):
 
         early_stopping = EarlyStopping(patience=50,verbose=True,monitor=monitor,op_type='max')
         for epoch in range(self.start_epoch, self.n_epoch):
+
+            setproctitle.setproctitle('{}: {}/{}'.format('Shi Jun', epoch, self.n_epoch))
+
             train_loss, train_dice, train_acc, train_run_dice = self._train_on_epoch(epoch, net, loss, optimizer, train_loader, scaler)
 
             if len(val_path) > 0:
                 val_loss, val_dice, val_acc, val_run_dice = self._val_on_epoch(epoch, net, loss, val_path)
             else:
-                val_loss, val_dice, val_acc, val_run_dice = 1,0,0
+                val_loss, val_dice, val_acc, val_run_dice = 1,0,0,0
 
             if lr_scheduler is not None:
                 lr_scheduler.step()

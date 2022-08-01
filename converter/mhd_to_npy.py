@@ -38,14 +38,40 @@ def mhd_to_nii(image_path,label_path,save_path):
 
         print(np.unique(labels))
 
-        nii_img_path = os.path.join(save_path, ID + '_img.nii.gz')
-        nii_lab_path = os.path.join(save_path, ID + '_lab.nii.gz')
+        nii_img_path = os.path.join(save_path, ID + '_0000.nii.gz')
+        nii_lab_path = os.path.join(save_path, ID + '.nii.gz')
 
         save_as_nii(images.astype(np.int16), nii_img_path)
         save_as_nii(labels.astype(np.uint8), nii_lab_path)
 
     print("run time: %.3f" % (time.time() - start))
 
+
+
+def mhd_to_nii_without_lab(image_path,save_path):
+
+    if not os.path.exists(save_path):
+        os.makedirs(save_path)
+    else:
+        shutil.rmtree(save_path)
+        os.makedirs(save_path)
+
+    path_list = os.listdir(image_path)
+
+    id_list = set([case.split('.')[0] for case in path_list])
+    print(len(id_list))
+    start = time.time()
+    for ID in tqdm(id_list):
+       
+        img_path = glob.glob(os.path.join(image_path, ID + '.mhd'))[0]
+        _,images = mhd_reader(img_path)
+        print(images.shape)
+ 
+        nii_img_path = os.path.join(save_path, ID + '_img.nii.gz')
+
+        save_as_nii(images.astype(np.int16), nii_img_path)
+
+    print("run time: %.3f" % (time.time() - start))
 
 
 def mhd_to_hdf5(image_path,label_path,save_path):
@@ -91,7 +117,17 @@ if __name__ == "__main__":
     # mhd_to_hdf5(image_path,label_path,save_path)
 
 
-    image_path = '../dataset/BloodVessel/raw_data/train/image'
-    label_path = '../dataset/BloodVessel/raw_data/train/label'
-    save_path = '../dataset/BloodVessel/nii_data/train/'
+    # image_path = '../dataset/BloodVessel/raw_data/train/image'
+    # label_path = '../dataset/BloodVessel/raw_data/train/label'
+    # save_path = '../dataset/BloodVessel/nii_data/train/'
+    # mhd_to_nii(image_path,label_path,save_path)
+
+
+    image_path = '../dataset/BloodVessel/raw_data/fake-test/image'
+    label_path = '../dataset/BloodVessel/raw_data/fake-test/label'
+    save_path = '../dataset/BloodVessel/nii_data/fake-test/'
     mhd_to_nii(image_path,label_path,save_path)
+
+    # image_path = '../dataset/BloodVessel/raw_data/fake-test'
+    # save_path = '../dataset/BloodVessel/nii_data/fake-test/'
+    # mhd_to_nii(image_path,save_path)
